@@ -16,6 +16,8 @@ public static class ExtensionMethods
 public class LightpadBlockTouchHandler : MonoBehaviour
 {
     public GameObject touchPrefab;
+    public Color activeTouchColor = Color.cyan;
+    public Color inActiveTouchColor = Color.gray;
     public GameObject activeTouchGO;
     public RectTransform canvasParent;
     public LightpadBlockTouchElement touchElement;
@@ -31,9 +33,27 @@ public class LightpadBlockTouchHandler : MonoBehaviour
             activeTouchGO = Instantiate(touchPrefab, canvasParent.transform);
             touchElement = activeTouchGO.GetComponent<LightpadBlockTouchElement>();
         }
-        xyzReceiver.onXUpdated.AddListener(HandleXUpdated);
-        xyzReceiver.onYUpdated.AddListener(HandleYUpdated);
-        xyzReceiver.onZUpdated.AddListener(HandleZUpdated);
+        xyzReceiver.xRawValueChanged += HandleXUpdated;
+        xyzReceiver.yRawValueChanged += HandleYUpdated;
+        xyzReceiver.zRawValueChanged += HandleZUpdated;
+        xyzReceiver.OnTouchBegan.AddListener(HandleTouchBegan);
+        xyzReceiver.OnTouchEnded.AddListener(HandleTouchEnded);
+    }
+
+    private void HandleTouchBegan()
+    {
+        if (touchElement != null)
+        {
+            touchElement.color = activeTouchColor;
+        }
+    }
+
+    private void HandleTouchEnded()
+    {
+        if (touchElement != null)
+        {
+            touchElement.color = inActiveTouchColor;
+        }
     }
 
     private void HandleXUpdated(int x)
@@ -54,15 +74,9 @@ public class LightpadBlockTouchHandler : MonoBehaviour
 
     private void HandleZUpdated(int z)
     {
-        
+
         float normal = Mathf.InverseLerp(0, 127, z);
         float remappedZ = Mathf.Lerp(touchZoomScaleMinMax.x, touchZoomScaleMinMax.y, normal);
         touchElement.dotImage.rectTransform.sizeDelta = new Vector2(remappedZ, remappedZ);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
